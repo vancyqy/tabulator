@@ -2,7 +2,7 @@ import CoreFeature from '../../core/CoreFeature.js';
 import RangeComponent from "./RangeComponent";
 
 export default class Range extends CoreFeature{
-	constructor(table, rangeManager, start, end) {
+	constructor(table, rangeManager, start, end, selectableRangeMode) {
 		super(table);
 		
 		this.rangeManager = rangeManager;
@@ -30,16 +30,19 @@ export default class Range extends CoreFeature{
 			this.end.col = 1;
 		}
 		
-		this.initElement();
+		this.initElement(selectableRangeMode);
 		
 		setTimeout(() => {
 			this.initBounds(start, end);
 		});
 	}
 	
-	initElement(){
+	initElement(selectableRangeMode){
 		this.element = document.createElement("div");
 		this.element.classList.add("tabulator-range");
+		if (selectableRangeMode) {
+			this.element.style.display = 'none'
+		}
 	}
 	
 	initBounds(start, end){
@@ -223,7 +226,36 @@ export default class Range extends CoreFeature{
 		return cell.row.position - 1 === this.bottom && cell.column.getPosition() - 1 === this.right;
 	}
 	
-	occupies(cell) {
+	occupies(cell, selectableRangeMode) {
+		if (selectableRangeMode === 'cell-col') {
+			if (this.occupiesColumn(cell.column)) {
+				if (cell.column.getPosition() - 1 === this.left) {
+					let result = cell.row.getPosition() - 1 >= this.start.row
+					if (cell.column.getPosition() - 1 === this.right) {
+						result = result && cell.row.getPosition() - 1 <= this.end.row
+					}
+					return result
+				} else if (cell.column.getPosition() - 1 === this.right) {
+					return cell.row.getPosition() - 1 <= this.end.row
+				} else {
+					return true
+				}
+			}
+		} else if (selectableRangeMode === 'cell-row') {
+			if (this.occupiesRow(cell.row)) {
+				if (cell.row.getPosition() - 1 === this.top) {
+					let result = cell.column.getPosition() - 1 >= this.start.col
+					if (cell.row.getPosition() - 1 === this.bottom) {
+						result = result && cell.column.getPosition() - 1 <= this.end.col
+					}
+					return result
+				} else if (cell.row.getPosition() - 1 === this.bottom) {
+					return cell.column.getPosition() - 1 <= this.end.col
+				} else {
+					return true
+				}
+			}
+		}
 		return this.occupiesRow(cell.row) && this.occupiesColumn(cell.column);
 	}
 	

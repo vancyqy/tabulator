@@ -288,7 +288,8 @@ export default class Edit extends Module{
 			nextRow = this.table.rowManager.prevDisplayRow(cell.row, true);
 			
 			if(nextRow){
-				nextRow.cells[index].getComponent().edit();
+				// nextRow.cells[index].getComponent().edit();
+				this.focusCellNoEvent(nextRow.cells[index].getComponent());
 				return true;
 			}
 		}
@@ -309,7 +310,9 @@ export default class Edit extends Module{
 			nextRow = this.table.rowManager.nextDisplayRow(cell.row, true);
 			
 			if(nextRow){
-				nextRow.cells[index].getComponent().edit();
+				// console.log('nextRow.cells[index].getComponent()', nextRow.cells[index].getComponent())
+				// nextRow.cells[index].getComponent().edit();
+				this.focusCellNoEvent(nextRow.cells[index].getComponent());
 				return true;
 			}
 		}
@@ -542,9 +545,9 @@ export default class Edit extends Module{
 		this.recursionBlock = false;
 	}
 	
-	editCell(cell, forceEdit){
+	editCell(cell, forceEdit, keyboardValue){
 		this.focusCellNoEvent(cell);
-		this.edit(cell, false, forceEdit);
+		this.edit(cell, false, forceEdit, keyboardValue);
 	}
 	
 	focusScrollAdjust(cell){
@@ -609,7 +612,7 @@ export default class Edit extends Module{
 		return check;
 	}
 	
-	edit(cell, e, forceEdit){
+	edit(cell, e, forceEdit, keyboardValue){
 		var self = this,
 		allowEdit = true,
 		rendered = function(){},

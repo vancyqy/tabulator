@@ -48,6 +48,7 @@ export default class SelectRange extends Module {
 	
 	initialize() {
 		if (this.options("selectableRange")) {	
+			this.selectableRangeMode = this.options("selectableRangeMode")
 			if(!this.options("selectableRows")){
 				this.maxRanges = this.options("selectableRange");
 				
@@ -234,6 +235,7 @@ export default class SelectRange extends Module {
 	
 	_handleKeyDown(e) {
 		if (!this.blockKeydown && (!this.table.modules.edit || (this.table.modules.edit && !this.table.modules.edit.currentCell))) {
+			const arrowKeys = ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown']
 			if (e.key === "Enter") {
 				// is editing a cell?
 				if (this.table.modules.edit && this.table.modules.edit.currentCell) {
@@ -249,6 +251,17 @@ export default class SelectRange extends Module {
 				if(this.activeRange){
 					this.activeRange.clearValues();
 				}
+			} else if (!e.shiftKey && !e.ctrlKey && !e.metaKey && arrowKeys.indexOf(e.key) === -1) {
+				// is editing a cell?
+				console.log('e.keyCode', e.keyCode)
+				console.log('e.key', e.key)
+				if (this.table.modules.edit && this.table.modules.edit.currentCell) {
+					return;
+				}
+				
+				this.table.modules.edit.editCell(this.getActiveCell(), false, e.key);
+				
+				e.preventDefault();
 			}
 		}
 	}
@@ -330,7 +343,7 @@ export default class SelectRange extends Module {
 	
 	renderCell(cell) {
 		var el = cell.getElement(),
-		rangeIdx = this.ranges.findIndex((range) => range.occupies(cell));
+		rangeIdx = this.ranges.findIndex((range) => range.occupies(cell, this.selectableRangeMode));
 		
 		el.classList.toggle("tabulator-range-selected", rangeIdx !== -1);
 		el.classList.toggle("tabulator-range-only-cell-selected", this.ranges.length === 1 && this.ranges[0].atTopLeft(cell) &&	this.ranges[0].atBottomRight(cell));
@@ -855,7 +868,7 @@ export default class SelectRange extends Module {
 			this.ranges.shift().destroy();
 		}
 		
-		range = new Range(this.table, this, start, end);
+		range = new Range(this.table, this, start, end, this.selectableRangeMode);
 		
 		this.activeRange = range;
 		this.ranges.push(range);

@@ -11656,11 +11656,13 @@
 
 		input.value = typeof cellValue !== "undefined" ? cellValue : "";
 
-		onRendered(function(){
+		onRendered(function(keyboardValue){
 			if(cell.getType() === "cell"){
 				input.focus({preventScroll: true});
 				input.style.height = "100%";
-
+				if (keyboardValue) {
+					input.value = keyboardValue;
+				}
 				if(editorParams.selectContents){
 					input.select();
 				}
@@ -11683,8 +11685,21 @@
 
 		//submit new value on enter
 		input.addEventListener("keydown", function(e){
+			console.log('e.keyCode', e.keyCode);
 			switch(e.keyCode){
 				// case 9:
+					case 39:
+						if (!input.value || input.selectionStart === input.value.length) {
+							e.preventDefault();
+							onChange();
+						}
+						break
+					case 37:
+						if (input.selectionStart === 0) {
+							e.preventDefault();
+							onChange();
+						}
+						break
 				case 13:
 					onChange();
 					break;
@@ -11871,7 +11886,7 @@
 			onChange();
 		};
 
-		onRendered(function () {
+		onRendered(function (keyboardValue) {
 			if(cell.getType() === "cell"){
 				//submit new value on blur
 				input.removeEventListener("blur", blurFunc);
@@ -11881,7 +11896,12 @@
 
 				//submit new value on blur
 				input.addEventListener("blur", blurFunc);
-
+				if (keyboardValue) {
+					if(!isNaN(keyboardValue) && keyboardValue !==""){
+						keyboardValue = Number(keyboardValue);
+					}
+					input.value = keyboardValue;
+				}
 				if(editorParams.selectContents){
 					input.select();
 				}
@@ -11907,6 +11927,18 @@
 		//submit new value on enter
 		input.addEventListener("keydown", function(e){
 			switch(e.keyCode){
+				case 39:
+					if (input.value === undefined || input.value === null || !input.value.length || input.selectionStart === input.value.toString().length) {
+						e.preventDefault();
+						onChange();
+					}
+					break
+				case 37:
+					if (input.selectionStart === 0) {
+						e.preventDefault();
+						onChange();
+					}
+					break
 				case 13:
 				// case 9:
 					onChange();
@@ -14134,7 +14166,8 @@
 				nextRow = this.table.rowManager.prevDisplayRow(cell.row, true);
 				
 				if(nextRow){
-					nextRow.cells[index].getComponent().edit();
+					// nextRow.cells[index].getComponent().edit();
+					this.focusCellNoEvent(nextRow.cells[index].getComponent());
 					return true;
 				}
 			}
@@ -14155,7 +14188,9 @@
 				nextRow = this.table.rowManager.nextDisplayRow(cell.row, true);
 				
 				if(nextRow){
-					nextRow.cells[index].getComponent().edit();
+					// console.log('nextRow.cells[index].getComponent()', nextRow.cells[index].getComponent())
+					// nextRow.cells[index].getComponent().edit();
+					this.focusCellNoEvent(nextRow.cells[index].getComponent());
 					return true;
 				}
 			}
@@ -14388,9 +14423,9 @@
 			this.recursionBlock = false;
 		}
 		
-		editCell(cell, forceEdit){
+		editCell(cell, forceEdit, keyboardValue){
 			this.focusCellNoEvent(cell);
-			this.edit(cell, false, forceEdit);
+			this.edit(cell, false, forceEdit, keyboardValue);
 		}
 		
 		focusScrollAdjust(cell){
@@ -14455,7 +14490,7 @@
 			return check;
 		}
 		
-		edit(cell, e, forceEdit){
+		edit(cell, e, forceEdit, keyboardValue){
 			var self = this,
 			allowEdit = true,
 			rendered = function(){},
@@ -25573,7 +25608,7 @@
 	}
 
 	class Range extends CoreFeature{
-		constructor(table, rangeManager, start, end) {
+		constructor(table, rangeManager, start, end, selectableRangeMode) {
 			super(table);
 			
 			this.rangeManager = rangeManager;
@@ -25601,16 +25636,19 @@
 				this.end.col = 1;
 			}
 			
-			this.initElement();
+			this.initElement(selectableRangeMode);
 			
 			setTimeout(() => {
 				this.initBounds(start, end);
 			});
 		}
 		
-		initElement(){
+		initElement(selectableRangeMode){
 			this.element = document.createElement("div");
 			this.element.classList.add("tabulator-range");
+			if (selectableRangeMode) {
+				this.element.style.display = 'none';
+			}
 		}
 		
 		initBounds(start, end){
@@ -25794,7 +25832,36 @@
 			return cell.row.position - 1 === this.bottom && cell.column.getPosition() - 1 === this.right;
 		}
 		
-		occupies(cell) {
+		occupies(cell, selectableRangeMode) {
+			if (selectableRangeMode === 'cell-col') {
+				if (this.occupiesColumn(cell.column)) {
+					if (cell.column.getPosition() - 1 === this.left) {
+						let result = cell.row.getPosition() - 1 >= this.start.row;
+						if (cell.column.getPosition() - 1 === this.right) {
+							result = result && cell.row.getPosition() - 1 <= this.end.row;
+						}
+						return result
+					} else if (cell.column.getPosition() - 1 === this.right) {
+						return cell.row.getPosition() - 1 <= this.end.row
+					} else {
+						return true
+					}
+				}
+			} else if (selectableRangeMode === 'cell-row') {
+				if (this.occupiesRow(cell.row)) {
+					if (cell.row.getPosition() - 1 === this.top) {
+						let result = cell.column.getPosition() - 1 >= this.start.col;
+						if (cell.row.getPosition() - 1 === this.bottom) {
+							result = result && cell.column.getPosition() - 1 <= this.end.col;
+						}
+						return result
+					} else if (cell.row.getPosition() - 1 === this.bottom) {
+						return cell.column.getPosition() - 1 <= this.end.col
+					} else {
+						return true
+					}
+				}
+			}
 			return this.occupiesRow(cell.row) && this.occupiesColumn(cell.column);
 		}
 		
@@ -26172,6 +26239,7 @@
 		
 		initialize() {
 			if (this.options("selectableRange")) {	
+				this.selectableRangeMode = this.options("selectableRangeMode");
 				if(!this.options("selectableRows")){
 					this.maxRanges = this.options("selectableRange");
 					
@@ -26354,6 +26422,7 @@
 		
 		_handleKeyDown(e) {
 			if (!this.blockKeydown && (!this.table.modules.edit || (this.table.modules.edit && !this.table.modules.edit.currentCell))) {
+				const arrowKeys = ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'];
 				if (e.key === "Enter") {
 					// is editing a cell?
 					if (this.table.modules.edit && this.table.modules.edit.currentCell) {
@@ -26369,6 +26438,17 @@
 					if(this.activeRange){
 						this.activeRange.clearValues();
 					}
+				} else if (!e.shiftKey && !e.ctrlKey && !e.metaKey && arrowKeys.indexOf(e.key) === -1) {
+					// is editing a cell?
+					console.log('e.keyCode', e.keyCode);
+					console.log('e.key', e.key);
+					if (this.table.modules.edit && this.table.modules.edit.currentCell) {
+						return;
+					}
+					
+					this.table.modules.edit.editCell(this.getActiveCell(), false, e.key);
+					
+					e.preventDefault();
 				}
 			}
 		}
@@ -26450,7 +26530,7 @@
 		
 		renderCell(cell) {
 			var el = cell.getElement(),
-			rangeIdx = this.ranges.findIndex((range) => range.occupies(cell));
+			rangeIdx = this.ranges.findIndex((range) => range.occupies(cell, this.selectableRangeMode));
 			
 			el.classList.toggle("tabulator-range-selected", rangeIdx !== -1);
 			el.classList.toggle("tabulator-range-only-cell-selected", this.ranges.length === 1 && this.ranges[0].atTopLeft(cell) &&	this.ranges[0].atBottomRight(cell));
@@ -26975,7 +27055,7 @@
 				this.ranges.shift().destroy();
 			}
 			
-			range = new Range(this.table, this, start, end);
+			range = new Range(this.table, this, start, end, this.selectableRangeMode);
 			
 			this.activeRange = range;
 			this.ranges.push(range);

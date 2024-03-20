@@ -42,7 +42,7 @@ export default function(cell, onRendered, success, cancel, editorParams){
 		onChange();
 	};
 
-	onRendered(function () {
+	onRendered(function (keyboardValue) {
 		if(cell.getType() === "cell"){
 			//submit new value on blur
 			input.removeEventListener("blur", blurFunc);
@@ -52,7 +52,12 @@ export default function(cell, onRendered, success, cancel, editorParams){
 
 			//submit new value on blur
 			input.addEventListener("blur", blurFunc);
-
+			if (keyboardValue) {
+				if(!isNaN(keyboardValue) && keyboardValue !==""){
+					keyboardValue = Number(keyboardValue);
+				}
+				input.value = keyboardValue
+			}
 			if(editorParams.selectContents){
 				input.select();
 			}
@@ -78,6 +83,18 @@ export default function(cell, onRendered, success, cancel, editorParams){
 	//submit new value on enter
 	input.addEventListener("keydown", function(e){
 		switch(e.keyCode){
+			case 39:
+				if (input.value === undefined || input.value === null || !input.value.length || input.selectionStart === input.value.toString().length) {
+					e.preventDefault()
+					onChange(e)
+				}
+				break
+			case 37:
+				if (input.selectionStart === 0) {
+					e.preventDefault()
+					onChange(e)
+				}
+				break
 			case 13:
 			// case 9:
 				onChange();

@@ -25,11 +25,13 @@ export default function(cell, onRendered, success, cancel, editorParams){
 
 	input.value = typeof cellValue !== "undefined" ? cellValue : "";
 
-	onRendered(function(){
+	onRendered(function(keyboardValue){
 		if(cell.getType() === "cell"){
 			input.focus({preventScroll: true});
 			input.style.height = "100%";
-
+			if (keyboardValue) {
+				input.value = keyboardValue
+			}
 			if(editorParams.selectContents){
 				input.select();
 			}
@@ -52,8 +54,21 @@ export default function(cell, onRendered, success, cancel, editorParams){
 
 	//submit new value on enter
 	input.addEventListener("keydown", function(e){
+		console.log('e.keyCode', e.keyCode)
 		switch(e.keyCode){
 			// case 9:
+				case 39:
+					if (!input.value || input.selectionStart === input.value.length) {
+						e.preventDefault()
+						onChange(e)
+					}
+					break
+				case 37:
+					if (input.selectionStart === 0) {
+						e.preventDefault()
+						onChange(e)
+					}
+					break
 			case 13:
 				onChange(e);
 				break;

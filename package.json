@@ -12,6 +12,7 @@
   "scripts": {
     "lint": "eslint src --fix",
     "prebuild": "eslint src --fix",
+    "start": "npm run dev:umd",
     "build": "rollup -c build/rollup.mjs",
     "deploy": "rollup -c build/rollup.mjs",
     "dev": "rollup -c build/rollup.mjs -w --environment TARGET:dev",
