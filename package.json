@@ -13,6 +13,7 @@
     "lint": "eslint src --fix",
     "prebuild": "eslint src --fix",
     "build": "rollup -c build/rollup.mjs",
+    "deploy": "rollup -c build/rollup.mjs",
     "dev": "rollup -c build/rollup.mjs -w --environment TARGET:dev",
     "dev:css": "rollup -c build/rollup.mjs -w --environment TARGET:css",
     "dev:esm": "rollup -c build/rollup.mjs -w --environment TARGET:esm",
