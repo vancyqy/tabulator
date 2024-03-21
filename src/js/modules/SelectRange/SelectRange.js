@@ -48,7 +48,7 @@ export default class SelectRange extends Module {
 	
 	initialize() {
 		if (this.options("selectableRange")) {	
-			this.selectableRangeMode = this.options("selectableRangeMode")
+			this.selectableRangeMode = this.options("selectableRangeMode");
 			if(!this.options("selectableRows")){
 				this.maxRanges = this.options("selectableRange");
 				
@@ -78,9 +78,13 @@ export default class SelectRange extends Module {
 		
 		this.activeRangeCellElement = document.createElement("div");
 		this.activeRangeCellElement.classList.add("tabulator-range-cell-active");
+
+		this.activeRangeLastCellElement = document.createElement("div");
+		this.activeRangeLastCellElement.classList.add("tabulator-range-cell-active");
 		
 		this.overlay.appendChild(this.rangeContainer);
 		this.overlay.appendChild(this.activeRangeCellElement);
+		this.overlay.appendChild(this.activeRangeLastCellElement);
 		
 		this.table.rowManager.element.addEventListener("keydown", this.keyDownEvent);
 		
@@ -235,7 +239,7 @@ export default class SelectRange extends Module {
 	
 	_handleKeyDown(e) {
 		if (!this.blockKeydown && (!this.table.modules.edit || (this.table.modules.edit && !this.table.modules.edit.currentCell))) {
-			const arrowKeys = ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown']
+			const arrowKeys = ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'];
 			if (e.key === "Enter") {
 				// is editing a cell?
 				if (this.table.modules.edit && this.table.modules.edit.currentCell) {
@@ -253,8 +257,8 @@ export default class SelectRange extends Module {
 				}
 			} else if (!e.shiftKey && !e.ctrlKey && !e.metaKey && arrowKeys.indexOf(e.key) === -1) {
 				// is editing a cell?
-				console.log('e.keyCode', e.keyCode)
-				console.log('e.key', e.key)
+				console.log('e.keyCode', e.keyCode);
+				console.log('e.key', e.key);
 				if (this.table.modules.edit && this.table.modules.edit.currentCell) {
 					return;
 				}
@@ -814,6 +818,19 @@ export default class SelectRange extends Module {
 		this.ranges.forEach((range) => range.layout());
 		
 		this.overlay.style.visibility = "visible";
+		
+		const activeLastCell = this.getCell(this.activeRange.end.row, this.activeRange.end.col);
+		if (activeLastCell !== activeCell) {
+			activeCellEl = activeLastCell.getElement();
+			activeRowEl = activeLastCell.row.getElement();
+			this.activeRangeLastCellElement.style.display = 'block';
+			this.activeRangeLastCellElement.style.left = activeRowEl.offsetLeft + activeCellEl.offsetLeft + "px";
+			this.activeRangeLastCellElement.style.top =	activeRowEl.offsetTop + "px";
+			this.activeRangeLastCellElement.style.width = activeCellEl.offsetWidth + "px";
+			this.activeRangeLastCellElement.style.height =  activeRowEl.offsetHeight  + "px";
+		} else {
+			this.activeRangeLastCellElement.style.display = 'none';
+		}
 	}
 	
 	

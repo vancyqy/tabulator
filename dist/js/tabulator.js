@@ -11688,18 +11688,18 @@
 			console.log('e.keyCode', e.keyCode);
 			switch(e.keyCode){
 				// case 9:
-					case 39:
-						if (!input.value || input.selectionStart === input.value.length) {
-							e.preventDefault();
-							onChange();
-						}
-						break
-					case 37:
-						if (input.selectionStart === 0) {
-							e.preventDefault();
-							onChange();
-						}
-						break
+				case 39:
+					if (!input.value || input.selectionStart === input.value.length) {
+						e.preventDefault();
+						onChange();
+					}
+					break;
+				case 37:
+					if (input.selectionStart === 0) {
+						e.preventDefault();
+						onChange();
+					}
+					break;
 				case 13:
 					onChange();
 					break;
@@ -11845,102 +11845,116 @@
 	}
 
 	//input element with type of number
-	function number$1(cell, onRendered, success, cancel, editorParams){
-		var cellValue = cell.getValue(),
-		vertNav = editorParams.verticalNavigation || "editor",
-		input = document.createElement("input");
+	function number$1 (cell, onRendered, success, cancel, editorParams) {
+		var cellValue = cell.getValue();
+		editorParams.verticalNavigation || "editor";
+		var input = document.createElement("input");
+		
+		// input.setAttribute("type", "number");
 
-		input.setAttribute("type", "number");
+		// if(typeof editorParams.max != "undefined"){
+		// 	input.setAttribute("max", editorParams.max);
+		// }
 
-		if(typeof editorParams.max != "undefined"){
-			input.setAttribute("max", editorParams.max);
-		}
+		// if(typeof editorParams.min != "undefined"){
+		// 	input.setAttribute("min", editorParams.min);
+		// }
 
-		if(typeof editorParams.min != "undefined"){
-			input.setAttribute("min", editorParams.min);
-		}
-
-		if(typeof editorParams.step != "undefined"){
-			input.setAttribute("step", editorParams.step);
-		}
+		// if(typeof editorParams.step != "undefined"){
+		// 	input.setAttribute("step", editorParams.step);
+		// }
 
 		//create and style input
 		input.style.padding = "4px";
 		input.style.width = "100%";
 		input.style.boxSizing = "border-box";
 
-		if(editorParams.elementAttributes && typeof editorParams.elementAttributes == "object"){
-			for (let key in editorParams.elementAttributes){
-				if(key.charAt(0) == "+"){
+		if (editorParams.elementAttributes && typeof editorParams.elementAttributes == "object") {
+			for (let key in editorParams.elementAttributes) {
+				if (key.charAt(0) == "+") {
 					key = key.slice(1);
 					input.setAttribute(key, input.getAttribute(key) + editorParams.elementAttributes["+" + key]);
-				}else {
+				} else {
 					input.setAttribute(key, editorParams.elementAttributes[key]);
 				}
 			}
 		}
 
-		input.value = cellValue;
+		input.value = cellValue || null;
+		input.select();
 
-		var blurFunc = function(e){
+		var blurFunc = function (e) {
 			onChange();
 		};
 
 		onRendered(function (keyboardValue) {
-			if(cell.getType() === "cell"){
+			if (cell.getType() === "cell") {
 				//submit new value on blur
 				input.removeEventListener("blur", blurFunc);
 
-				input.focus({preventScroll: true});
+				input.focus({ preventScroll: true });
 				input.style.height = "100%";
 
 				//submit new value on blur
 				input.addEventListener("blur", blurFunc);
 				if (keyboardValue) {
-					if(!isNaN(keyboardValue) && keyboardValue !==""){
+					if (!isNaN(keyboardValue) && keyboardValue !== "") {
 						keyboardValue = Number(keyboardValue);
 					}
 					input.value = keyboardValue;
 				}
-				if(editorParams.selectContents){
+				if (editorParams.selectContents) {
 					input.select();
 				}
 			}
 		});
 
-		function onChange(){
-			var value = input.value;
+		function onChange() {
+			// var value = input.value;
 
-			if(!isNaN(value) && value !==""){
-				value = Number(value);
-			}
+			// if (!isNaN(value) && value !== "") {
+			// 	value = Number(value);
+			// }
 
-			if(value !== cellValue){
-				if(success(value)){
-					cellValue = value; //persist value if successfully validated incase editor is used as header filter
+			// if (value !== cellValue) {
+			// 	if (success(value)) {
+			// 		cellValue = value; //persist value if successfully validated incase editor is used as header filter
+			// 	}
+			// } else {
+			// 	cancel();
+			// }
+			console.log('cellValue', cellValue);
+			if(((cellValue === null || typeof cellValue === "undefined") && input.value !== "") || input.value !== cellValue){
+				console.log('input.value', input.value);
+				if(success(input.value)){
+					cellValue = input.value; //persist value if successfully validated incase editor is used as header filter
 				}
 			}else {
 				cancel();
 			}
 		}
 
+		//submit new value on blur or change
+		input.addEventListener("change", onChange);
+		input.addEventListener("blur", onChange);
+
 		//submit new value on enter
-		input.addEventListener("keydown", function(e){
-			switch(e.keyCode){
+		input.addEventListener("keydown", function (e) {
+			switch (e.keyCode) {
 				case 39:
 					if (input.value === undefined || input.value === null || !input.value.length || input.selectionStart === input.value.toString().length) {
 						e.preventDefault();
 						onChange();
 					}
-					break
+					break;
 				case 37:
 					if (input.selectionStart === 0) {
 						e.preventDefault();
 						onChange();
 					}
-					break
+					break;
 				case 13:
-				// case 9:
+					// case 9:
 					onChange();
 					break;
 
@@ -11950,20 +11964,34 @@
 
 				case 38: //up arrow
 				case 40: //down arrow
-					if(vertNav == "editor"){
-						e.stopImmediatePropagation();
-						e.stopPropagation();
-					}
+					// if (vertNav == "editor") {
+					// 	e.stopImmediatePropagation();
+					// 	e.stopPropagation();
+					// }
+					e.preventDefault();
+					onChange();
 					break;
-
 				case 35:
 				case 36:
 					e.stopPropagation();
 					break;
 			}
 		});
+		input.addEventListener('keyup', function () {
+			// var integer_regexp = (/[^0-9]|^0+(?!$)/g);
+			if (this.value === '') {
+				return this.value = null
+			}
+			if (this.value === undefined || this.value === null) {
+				return
+			}
+			var float_regexp = (/[^0-9\.]|^\.+(?!$)|^0+(?=[0-9]+)|\.(?=\.|.+\.)/g);
+			if (float_regexp.test(this.value)) {
+				this.value = this.value.replace(float_regexp, '');
+			}
+		});
 
-		if(editorParams.mask){
+		if (editorParams.mask) {
 			maskInput(input, editorParams);
 		}
 
@@ -14605,7 +14633,7 @@
 							element.appendChild(cellEditor);
 							
 							//trigger onRendered Callback
-							rendered();
+							rendered(keyboardValue);
 							
 							//prevent editing from triggering rowClick event
 							var children = element.children;
@@ -25835,30 +25863,54 @@
 		occupies(cell, selectableRangeMode) {
 			if (selectableRangeMode === 'cell-col') {
 				if (this.occupiesColumn(cell.column)) {
-					if (cell.column.getPosition() - 1 === this.left) {
-						let result = cell.row.getPosition() - 1 >= this.start.row;
-						if (cell.column.getPosition() - 1 === this.right) {
-							result = result && cell.row.getPosition() - 1 <= this.end.row;
+					const isRevert = this.start.col > this.end.col;
+					const isStartCol = cell.column.getPosition() - 1 === this.start.col;
+					const isEndCol = cell.column.getPosition() - 1 === this.end.col;
+					const cellRow =  cell.row.getPosition() - 1;
+					if (isRevert) {
+						let result = true;
+						if (isStartCol) {
+							result = result && cellRow <= this.start.row;
+						} 
+						if (isEndCol) {
+							result = result && cellRow >= this.end.row;
 						}
 						return result
-					} else if (cell.column.getPosition() - 1 === this.right) {
-						return cell.row.getPosition() - 1 <= this.end.row
 					} else {
-						return true
+						let result = true;
+						if (isStartCol) {
+							result = result && cellRow >= this.start.row;
+						} 
+						if (isEndCol) {
+							result = result && cellRow <= this.end.row;
+						}
+						return result
 					}
 				}
 			} else if (selectableRangeMode === 'cell-row') {
 				if (this.occupiesRow(cell.row)) {
-					if (cell.row.getPosition() - 1 === this.top) {
-						let result = cell.column.getPosition() - 1 >= this.start.col;
-						if (cell.row.getPosition() - 1 === this.bottom) {
-							result = result && cell.column.getPosition() - 1 <= this.end.col;
+					const isRevert = this.start.row > this.end.row;
+					const isStartRow = cell.row.getPosition() - 1 === this.start.row;
+					const isEndRow = cell.row.getPosition() - 1 === this.end.row;
+					const cellCol =  cell.column.getPosition() - 1;
+					if (isRevert) {
+						let result = true;
+						if (isStartRow) {
+							result = result && cellCol <= this.start.col;
+						} 
+						if (isEndRow) {
+							result = result && cellCol >= this.end.col;
 						}
 						return result
-					} else if (cell.row.getPosition() - 1 === this.bottom) {
-						return cell.column.getPosition() - 1 <= this.end.col
 					} else {
-						return true
+						let result = true;
+						if (isStartRow) {
+							result = result && cellCol >= this.start.col;
+						} 
+						if (isEndRow) {
+							result = result && cellCol <= this.end.col;
+						}
+						return result
 					}
 				}
 			}
@@ -26269,9 +26321,13 @@
 			
 			this.activeRangeCellElement = document.createElement("div");
 			this.activeRangeCellElement.classList.add("tabulator-range-cell-active");
+
+			this.activeRangeLastCellElement = document.createElement("div");
+			this.activeRangeLastCellElement.classList.add("tabulator-range-cell-active");
 			
 			this.overlay.appendChild(this.rangeContainer);
 			this.overlay.appendChild(this.activeRangeCellElement);
+			this.overlay.appendChild(this.activeRangeLastCellElement);
 			
 			this.table.rowManager.element.addEventListener("keydown", this.keyDownEvent);
 			
@@ -27001,6 +27057,19 @@
 			this.ranges.forEach((range) => range.layout());
 			
 			this.overlay.style.visibility = "visible";
+			
+			const activeLastCell = this.getCell(this.activeRange.end.row, this.activeRange.end.col);
+			if (activeLastCell !== activeCell) {
+				activeCellEl = activeLastCell.getElement();
+				activeRowEl = activeLastCell.row.getElement();
+				this.activeRangeLastCellElement.style.display = 'block';
+				this.activeRangeLastCellElement.style.left = activeRowEl.offsetLeft + activeCellEl.offsetLeft + "px";
+				this.activeRangeLastCellElement.style.top =	activeRowEl.offsetTop + "px";
+				this.activeRangeLastCellElement.style.width = activeCellEl.offsetWidth + "px";
+				this.activeRangeLastCellElement.style.height =  activeRowEl.offsetHeight  + "px";
+			} else {
+				this.activeRangeLastCellElement.style.display = 'none';
+			}
 		}
 		
 		

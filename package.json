@@ -11,10 +11,9 @@
   ],
   "scripts": {
     "lint": "eslint src --fix",
-    "prebuild": "eslint src --fix",
     "start": "npm run dev:umd",
     "build": "rollup -c build/rollup.mjs",
-    "deploy": "rollup -c build/rollup.mjs",
+    "deploy": "npm run build & node scripts/deploy",
     "dev": "rollup -c build/rollup.mjs -w --environment TARGET:dev",
     "dev:css": "rollup -c build/rollup.mjs -w --environment TARGET:css",
     "dev:esm": "rollup -c build/rollup.mjs -w --environment TARGET:esm",

@@ -731,7 +731,7 @@ export default class Edit extends Module{
 						element.appendChild(cellEditor);
 						
 						//trigger onRendered Callback
-						rendered();
+						rendered(keyboardValue);
 						
 						//prevent editing from triggering rowClick event
 						var children = element.children;

@@ -41,7 +41,7 @@ export default class Range extends CoreFeature{
 		this.element = document.createElement("div");
 		this.element.classList.add("tabulator-range");
 		if (selectableRangeMode) {
-			this.element.style.display = 'none'
+			this.element.style.display = 'none';
 		}
 	}
 	
@@ -229,30 +229,54 @@ export default class Range extends CoreFeature{
 	occupies(cell, selectableRangeMode) {
 		if (selectableRangeMode === 'cell-col') {
 			if (this.occupiesColumn(cell.column)) {
-				if (cell.column.getPosition() - 1 === this.left) {
-					let result = cell.row.getPosition() - 1 >= this.start.row
-					if (cell.column.getPosition() - 1 === this.right) {
-						result = result && cell.row.getPosition() - 1 <= this.end.row
+				const isRevert = this.start.col > this.end.col
+				const isStartCol = cell.column.getPosition() - 1 === this.start.col
+				const isEndCol = cell.column.getPosition() - 1 === this.end.col
+				const cellRow =  cell.row.getPosition() - 1
+				if (isRevert) {
+					let result = true
+					if (isStartCol) {
+						result = result && cellRow <= this.start.row
+					} 
+					if (isEndCol) {
+						result = result && cellRow >= this.end.row
 					}
 					return result
-				} else if (cell.column.getPosition() - 1 === this.right) {
-					return cell.row.getPosition() - 1 <= this.end.row
 				} else {
-					return true
+					let result = true
+					if (isStartCol) {
+						result = result && cellRow >= this.start.row
+					} 
+					if (isEndCol) {
+						result = result && cellRow <= this.end.row
+					}
+					return result
 				}
 			}
 		} else if (selectableRangeMode === 'cell-row') {
 			if (this.occupiesRow(cell.row)) {
-				if (cell.row.getPosition() - 1 === this.top) {
-					let result = cell.column.getPosition() - 1 >= this.start.col
-					if (cell.row.getPosition() - 1 === this.bottom) {
-						result = result && cell.column.getPosition() - 1 <= this.end.col
+				const isRevert = this.start.row > this.end.row
+				const isStartRow = cell.row.getPosition() - 1 === this.start.row
+				const isEndRow = cell.row.getPosition() - 1 === this.end.row
+				const cellCol =  cell.column.getPosition() - 1
+				if (isRevert) {
+					let result = true
+					if (isStartRow) {
+						result = result && cellCol <= this.start.col
+					} 
+					if (isEndRow) {
+						result = result && cellCol >= this.end.col
 					}
 					return result
-				} else if (cell.row.getPosition() - 1 === this.bottom) {
-					return cell.column.getPosition() - 1 <= this.end.col
 				} else {
-					return true
+					let result = true
+					if (isStartRow) {
+						result = result && cellCol >= this.start.col
+					} 
+					if (isEndRow) {
+						result = result && cellCol <= this.end.col
+					}
+					return result
 				}
 			}
 		}
